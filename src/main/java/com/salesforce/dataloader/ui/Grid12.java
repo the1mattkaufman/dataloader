@@ -52,7 +52,7 @@ public class Grid12 {
         this(composite, columnWidth, SWT.DEFAULT);
     }
     public Grid12(Composite composite, int columnWidth, int cellHeight){
-        this(composite, columnWidth, cellHeight, false, true);
+        this(composite, columnWidth, cellHeight, true, true);
     }
     public Grid12(Composite composite, int columnWidth, int cellHeight, boolean grabExcessVerticalSpace, boolean grabExcessHorizontalSpace) {
         this.composite = composite;
