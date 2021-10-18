@@ -47,7 +47,7 @@ public class UsernamePasswordLoginStandardControl extends Composite {
     public UsernamePasswordLoginStandardControl(Composite parent, int style, AuthenticationRunner authentication) {
         super(parent, style);
         this.authentication = authentication;
-        grid = new Grid12(this, 40, 25);
+        grid = new Grid12(this, 40, 30);
 
         grid.createLabel(4, Labels.getString("SettingsPage.username"));
         userName = grid.createText(6, SWT.BORDER | SWT.FILL, authentication.getConfig().getString(Config.USERNAME));
