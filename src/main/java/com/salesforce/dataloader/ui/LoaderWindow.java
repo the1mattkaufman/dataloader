@@ -158,7 +158,7 @@ public class LoaderWindow extends ApplicationWindow {
 
         // Set the title bar text
         shell.setText(Labels.getString("LoaderWindow.title"));
-        shell.setSize(600, 400);
+        shell.setSize(800, 600);
 
         shell.setImage(UIUtils.getImageRegistry().get("sfdc_icon"));
 
