@@ -74,11 +74,11 @@ public class UIUtils {
                     ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/icons/icon_32x32.png")));
 
             image_registry.put("logo",
-                    ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/icons/icon_128x128.png")));
+                    ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/icons/icon_32x32.png")));
             image_registry.put("title_logo",
                     ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/dataloader-title-logo.png")));
             image_registry.put("splashscreens",
-                    ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/icons/icon_128x128.png")));
+                    ImageDescriptor.createFromURL(baseClass.getClassLoader().getResource("img/icons/icon_32x32.png")));
 
             for (OperationInfo info : OperationInfo.values()) {
                 if (image_registry.get(info.getIconName()) == null)
