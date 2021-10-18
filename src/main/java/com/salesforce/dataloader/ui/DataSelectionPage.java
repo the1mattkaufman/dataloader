@@ -87,7 +87,7 @@ public class DataSelectionPage extends LoadPage {
 
         GridLayout gridLayout = new GridLayout(1, false);
         gridLayout.horizontalSpacing = 10;
-        gridLayout.marginHeight = 15;
+        gridLayout.marginHeight = 5;
         gridLayout.verticalSpacing = 5;
         gridLayout.marginRight = 5;
 
