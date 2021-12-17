@@ -23,16 +23,48 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.dataloader.process;
 
-/*
- * A small utility to find java home when the user has not set it
- */
-public class FindJavaRunner {
-    public static void main(String[] args) {
-        String home = System.getProperty("java.home");
-        if (home != null){
-            System.out.println(home);
+package com.salesforce.dataloader.util;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
+import com.salesforce.dataloader.process.DataLoaderRunner;
+
+
+public class DateOnlyCalendar extends GregorianCalendar {
+    static final TimeZone GMT_TZ = TimeZone.getTimeZone("GMT");
+
+    public DateOnlyCalendar() {
+        super();
+    }
+
+    private DateOnlyCalendar(TimeZone tz) {
+        // Use the timezone param to update the date by 1 in setDate()
+        super(tz);
+    }
+
+    public void setTimeInMillis(long specifiedTimeInMilliSeconds) {
+        TimeZone myTimeZone = super.getTimeZone();
+        Calendar cal = Calendar.getInstance(myTimeZone);
+        cal.setTimeInMillis(specifiedTimeInMilliSeconds);
+
+        TimeZone gmt = TimeZone.getTimeZone("GMT");
+        if (!DataLoaderRunner.doUseGMTForDateFieldValue() && myTimeZone != null) {
+            int timeZoneDifference = myTimeZone.getRawOffset() - gmt.getRawOffset() + myTimeZone.getDSTSavings() - gmt.getDSTSavings();
+            if (timeZoneDifference > 0) {
+                // timezone is ahead of GMT, add 1 day to the specified time in milliseconds
+                cal.add(Calendar.DATE, 1);
+            }
         }
+        super.setTimeInMillis(cal.getTimeInMillis());
+    }
+
+    public static DateOnlyCalendar getInstance(TimeZone timeZone) {
+        if (DataLoaderRunner.doUseGMTForDateFieldValue()) {
+            timeZone = GMT_TZ;
+        } 
+        return new DateOnlyCalendar(timeZone);
     }
 }

@@ -25,18 +25,18 @@
  */
 package com.salesforce.dataloader.model;
 
-import java.util.Date;
+import com.salesforce.dataloader.util.DateOnlyCalendar;
 
-public class NADateValue  extends Date {
+public class NADateOnlyCalendarValue  extends DateOnlyCalendar {
 
-    private static final NADateValue INSTANCE = new NADateValue();
+    private static final NADateOnlyCalendarValue INSTANCE = new NADateOnlyCalendarValue();
     private static final String NA_VALUE = "#N/A";
 
-    private NADateValue() {
+    private NADateOnlyCalendarValue() {
         super();
     }
 
-    public static NADateValue getInstance() {
+    public static NADateOnlyCalendarValue getInstance() {
         return INSTANCE;
     }
 

@@ -137,7 +137,7 @@ public class CSVFileWriter implements DataWriter {
     }
 
     private void writeHeaderRow() throws DataAccessObjectInitializationException {
-        CSVColumnVisitor visitor = new CSVColumnVisitor(fileOut);
+        CSVColumnVisitor visitor = new CSVColumnVisitor(fileOut, false);
         try {
             visitHeaderColumns(this.columnNames, visitor);
             fileOut.newLine();
@@ -155,7 +155,7 @@ public class CSVFileWriter implements DataWriter {
      */
     @Override
     public boolean writeRow(Row row) throws DataAccessObjectException {
-        CSVColumnVisitor visitor = new CSVColumnVisitor(fileOut);
+        CSVColumnVisitor visitor = new CSVColumnVisitor(fileOut, false);
         try {
             visitColumns(columnNames, row, visitor);
             fileOut.newLine();

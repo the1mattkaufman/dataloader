@@ -4,7 +4,7 @@
   <groupId>com.force</groupId>
   <artifactId>dataloader</artifactId>
   <packaging>jar</packaging>
-  <version>53.0.0</version>
+  <version>53.0.1</version>
   <name>Data Loader</name>
   <url>https://github.com/forcedotcom/dataloader</url>
   <organization>
@@ -17,10 +17,9 @@
     <force.partner.api.version>${force.wsc.version}</force.partner.api.version>
     <build.year>2021</build.year>
     <java.compile.version>11</java.compile.version>
-    <codesign>DONTSIGN</codesign>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <config.additional.properties></config.additional.properties>
-    <jarsigner.skip>true</jarsigner.skip>
+    <swt.version>4.21</swt.version>
 
     <!-- test properties -->
     <test.endpoint>http://testendpoint</test.endpoint>
@@ -50,7 +49,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.8.8</version>
+      <version>2.8.9</version>
     </dependency>
     <dependency>
       <groupId>com.force.api</groupId>
@@ -90,13 +89,13 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.14.1</version>
+      <version>2.16.0</version>
     </dependency>
 <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.14.1</version>
+      <version>2.16.0</version>
     </dependency>
 <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
     <dependency>
@@ -114,13 +113,13 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>5.3.9</version>
+      <version>5.3.13</version>
     </dependency>
 <!-- https://mvnrepository.com/artifact/org.eclipse.platform/org.eclipse.jface --> 
     <dependency>
       <groupId>org.eclipse.platform</groupId>
       <artifactId>org.eclipse.jface</artifactId>
-      <version>3.22.200</version>
+      <version>3.24.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.eclipse.platform</groupId>
@@ -134,7 +133,7 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.200</version>
+      <version>2.0.202</version>
       <scope>test</scope>
     </dependency>
 <!-- https://mvnrepository.com/artifact/junit/junit -->
@@ -148,14 +147,14 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
-      <version>5.3.9</version>
+      <version>5.3.13</version>
       <scope>test</scope>
     </dependency>
 <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>3.12.4</version>
+      <version>4.1.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -278,7 +277,7 @@
             </nonFilteredFileExtensions>
         </configuration>
       </plugin>
-      
+        
 <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -325,13 +324,17 @@
           <artifactId>license-maven-plugin</artifactId>
           <version>4.1</version>
           <configuration>
+            <licenseSets>
+              <licenseSet>
               <header>license.txt</header>
               <includes>
                   <include>**/*.java</include>
               </includes>
-              <properties>
-                <strictChecking>true</strictChecking>
-              </properties>
+                <properties>
+                  <strictChecking>true</strictChecking>
+                </properties>
+              </licenseSet>
+            </licenseSets>
           </configuration>
           <executions>
               <execution>
@@ -347,82 +350,62 @@
 
   <profiles>
     <profile>
-      <id>macos_x86_64</id>
+      <id>mac_x86_64</id>
       <activation>
-        <property>
-          <name>targetOS</name>
-          <value>macos_x86_64</value>
-        </property>
+        <os>
+          <family>mac</family>
+        </os>
       </activation>
       <dependencies>
         <dependency>
           <groupId>local.swt</groupId>
-          <artifactId>swtmacx86_64</artifactId>
-          <version>4.20</version>
+          <artifactId>swtmac_x86_64</artifactId>
+          <version>${swt.version}</version>
         </dependency>
       </dependencies>
       <properties>
           <OSType>mac</OSType>
+          <targetOS>mac_x86_64</targetOS>
       </properties>
     </profile>
 
     <profile>
-      <id>macos_arm_64</id>
+      <id>win32_x86_64</id>
       <activation>
-        <property>
-          <name>targetOS</name>
-          <value>macos_arm_64</value>
-        </property>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>local.swt</groupId>
-          <artifactId>swtmacarm64</artifactId>
-          <version>4.20</version>
-        </dependency>
-      </dependencies>
-      <properties>
-          <OSType>mac</OSType>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>windows_x86_64</id>
-      <activation>
-        <property>
-          <name>targetOS</name>
-          <value>windows_x86_64</value>
-        </property>
+        <os>
+          <family>Windows</family>
+        </os>
       </activation>
       <dependencies>
         <dependency>
           <groupId>local.swt</groupId>
           <artifactId>swtwin32_x86_64</artifactId>
-          <version>4.20</version>
+          <version>${swt.version}</version>
         </dependency>
       </dependencies>
       <properties>
           <OSType>win</OSType>
+          <targetOS>win32_x86_64</targetOS>
       </properties>
     </profile>
     
     <profile>
       <id>linux_x86_64</id>
       <activation>
-        <property>
-          <name>targetOS</name>
-          <value>linux_x86_64</value>
-        </property>
+        <os>
+          <family>linux</family>
+        </os>
       </activation>
       <dependencies>
         <dependency>
           <groupId>local.swt</groupId>
           <artifactId>swtlinux_x86_64</artifactId>
-          <version>4.20</version>
+          <version>${swt.version}</version>
         </dependency>
       </dependencies>
       <properties>
           <OSType>linux</OSType>
+          <targetOS>linux_x86_64</targetOS>
       </properties>
     </profile>
     
@@ -459,54 +442,46 @@
 	          </execution>
 	        </executions>
 	      </plugin>
-	      
-<!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
-	      <plugin>
-	        <artifactId>maven-shade-plugin</artifactId>
-	        <version>3.2.4</version>
-	        <executions>
-	          <execution>
-	            <phase>package</phase>
-	            <goals>
-	              <goal>shade</goal>
-	            </goals>
-	            <configuration>
-	              <shadedArtifactAttached>true</shadedArtifactAttached>
-	              <shadedClassifierName>shade</shadedClassifierName> <!-- Any name that makes sense -->
-	              <filters>
-	                <filter>
-	                  <artifact>*:*</artifact>
-	                  <excludes>
-	                    <exclude>module-info.class</exclude>
-	                    <exclude>META-INF/*.SF</exclude>
-	                    <exclude>META-INF/*.MF</exclude>
-	                    <exclude>META-INF/*.txt</exclude>
-	                    <exclude>META-INF/LICENSE</exclude>
-	                    <exclude>META-INF/NOTICE</exclude>
-	                    <exclude>META-INF/DEPENDENCIES</exclude>
-	                    <exclude>META-INF/*.DSA</exclude>
-	                    <exclude>META-INF/*.RSA</exclude>
-	                    <exclude>*.*</exclude>
-	                  </excludes>
-	                </filter>
-	              </filters>
-	              <transformers>
-	                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-	                  <mainClass>com.salesforce.dataloader.process.DataLoaderRunner</mainClass>
-	                </transformer>
-	                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-	                  <resource>META-INF/spring.handlers</resource>
-	                </transformer>
-	                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-	                  <resource>META-INF/spring.schemas</resource>
-	                </transformer>
-	                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-	                  <resource>META-INF/spring.tooling</resource>
-	                </transformer>
-	              </transformers>
-	            </configuration>
-	          </execution>
-	        </executions>
+
+<!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-antrun-plugin -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+              <execution>
+                <phase>compile</phase>
+                <configuration>
+                  <target>
+                    <ant antfile="${basedir}/extractSWTJar.xml" inheritAll="true" />
+                    <delete includeEmptyDirs="true">
+                      <dirset dir="${basedir}/target/">
+                        <patternset>
+                          <include name="**/${swt.version}"/>
+                         </patternset>
+                      </dirset>
+                    </delete>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+	        <dependencies>
+<!-- https://mvnrepository.com/artifact/ant-contrib/ant-contrib -->
+              <dependency>
+              <groupId>ant-contrib</groupId>
+              <artifactId>ant-contrib</artifactId>
+              <version>1.0b3</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>ant</groupId>
+                  <artifactId>ant</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+          </dependencies>
 	      </plugin>
         </plugins>
       </build>
@@ -523,26 +498,11 @@
             <version>3.0.0</version>
             <executions>
               <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
                 <configuration>
                   <target>
                     <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="maven.plugin.classpath"/>
-                    <if>
-                      <isfalse value="${jarsigner.skip}" />
-                      <then>
-                        <echo>signing target/dataloader-${project.version}-uber.jar</echo>
-                        <signjar
-                          jar="${basedir}/target/dataloader-${project.version}-uber.jar"
-                          alias="${jarsigner.alias}"
-                          tsaurl="${jarsigner.tsa}"
-                          storepass="${jarsigner.storepass}"
-                          keystore="${jarsigner.keystore}" />
-                      </then>
-                    </if>
                     <echo>creating version-specific files for the target OS: ${OSType}</echo>
+					<delete dir="${basedir}/target/${OSType}"/>
                     <mkdir dir="${basedir}/target/${OSType}"/>
                     <copy todir="${basedir}/target/${OSType}">
                       <fileset dir="${basedir}/release/${OSType}"/>
@@ -559,30 +519,25 @@
                     <replace dir="${basedir}/target/${OSType}/" token="@@MIN_JAVA_VERSION@@" value="${java.compile.version}"/>
                     <chmod file="${basedir}/target/${OSType}/*" perm="755" />
     
-     
                     <echo>copying uber jar to OS-specific folder for the target OS: ${OSType}</echo>
                     <copy file="${basedir}/target/dataloader-${project.version}-uber.jar" 
                        todir="${basedir}/target/${OSType}"/>
-                 
+                       
+                    <copy todir="${basedir}/target/${OSType}" >
+                      <fileset dir="${basedir}/target/" includes="swt${OSType}*/*"/>
+                    </copy> 
                     <echo>zip OS-specific folder</echo>
                     <zip update="true" destfile="${basedir}/target/${OSType}/dataloader_${OSType}.zip" >
                       <zipfileset dirmode="755" filemode="755" 
                         dir="${basedir}/target/${OSType}" />
                      </zip>
-                     <if>
-                       <isfalse value="${jarsigner.skip}" />
-                       <then>
-                         <signjar
-                          jar="${basedir}/target/${OSType}/dataloader_${OSType}.zip"
-                          alias="${jarsigner.alias}"
-                          tsaurl="${jarsigner.tsa}"
-                          storepass="${jarsigner.storepass}"
-                          keystore="${jarsigner.keystore}" />
-                       </then>
-                     </if>
-
-                  </target>
+                   </target>
                 </configuration>
+                <id>package</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
              </execution>
             </executions>
             <dependencies>

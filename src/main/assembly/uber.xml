@@ -11,6 +11,9 @@
     <dependencySet>
       <unpack>true</unpack>
       <scope>runtime</scope>
+      <excludes>      
+        <exclude>local.swt:swt${targetOS}:</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets>
   <fileSets>

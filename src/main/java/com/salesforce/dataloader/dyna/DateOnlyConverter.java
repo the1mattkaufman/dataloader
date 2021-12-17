@@ -28,44 +28,33 @@ package com.salesforce.dataloader.dyna;
 
 import java.util.*;
 
-import com.salesforce.dataloader.model.NADateValue;
-import com.salesforce.dataloader.model.NATextValue;
-import com.salesforce.dataloader.process.DataLoaderRunner;
-
+import com.salesforce.dataloader.util.DateOnlyCalendar;
+import com.salesforce.dataloader.model.NADateOnlyCalendarValue;
 import org.apache.commons.beanutils.Converter;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
-public class DateOnlyConverter implements Converter {
-    static final TimeZone GMT_TZ = TimeZone.getTimeZone("GMT");
+public class DateOnlyConverter extends DateTimeConverter implements Converter {
 
-    static Logger logger = LogManager.getLogger(DateOnlyConverter.class);
-    private DateTimeConverter dateTimeConverter;
-    private TimeZone timeZone;
+    public DateOnlyConverter(TimeZone tz) {
+        super(tz);
+    }
 
     public DateOnlyConverter(TimeZone tz, boolean useEuroDateFormat) {
-        if (DataLoaderRunner.doUseGMTForDateFieldValue()) {
-            this.timeZone = GMT_TZ;
-        } else {
-            this.timeZone = tz;
-        }
-        this.dateTimeConverter = new DateTimeConverter(this.timeZone, useEuroDateFormat);
+        super(tz, useEuroDateFormat);
     }
 
-    @Override
-    public Object convert(Class type, Object value) {
-        if (value == null) {
-            return null;
-        }
-
-        if(value instanceof NATextValue) {
-            return NADateValue.getInstance();
-        }
-        
-        Calendar cal = (Calendar) this.dateTimeConverter.convert(type, value);
-        if (cal != null) {
-            return cal.getTime();
-        }
-        return null;
+    public DateOnlyConverter(TimeZone tz, Object defaultValue, boolean useEuroDateFormat) {
+        super(tz, defaultValue, useEuroDateFormat);
     }
-}
+
+    public DateOnlyConverter(TimeZone tz, Object defaultValue) {
+       super(tz, defaultValue);
+    }
+
+    Calendar getCalendar(TimeZone tz) {
+        return DateOnlyCalendar.getInstance(tz);
+    }
+
+    Calendar getNAValueCalendar() {
+        return NADateOnlyCalendarValue.getInstance();
+    }
+} 
