@@ -23,35 +23,28 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.dataloader.ui.uiActions;
 
-import org.eclipse.jface.action.Action;
+package org.apache.logging.log4j.core.lookup;
 
-import com.salesforce.dataloader.action.OperationInfo;
-import com.salesforce.dataloader.controller.Controller;
-import com.salesforce.dataloader.ui.LoaderWindow;
-import com.salesforce.dataloader.ui.LoaderWizardDialog;
 
-public class OperationUIAction extends Action {
-    private final Controller controller;
-    private final OperationInfo opInfo;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.config.plugins.Plugin;
 
-    public OperationUIAction(Controller controller, OperationInfo info) {
-        super(info.getMenuLabel(), info.getIconImageDescriptor());
-        setToolTipText(info.getToolTipText());
 
-        this.controller = controller;
-        this.opInfo = info;
+/**
+ * Looks up keys from JNDI resources.
+ */
+@Plugin(name = "jndi", category = StrLookup.CATEGORY)
+public class JndiLookup extends AbstractLookup {
 
-        setEnabled(info.isOperationAllowed(controller.getConfig()));
-    }
-
+    /**
+     * Looks up the value of the JNDI resource.
+     * @param event The current LogEvent (is ignored by this StrLookup).
+     * @param key  the JNDI resource name to be looked up, may be null
+     * @return The String value of the JNDI resource.
+     */
     @Override
-    public void run() {
-        this.controller.clearMapper();
-        LoaderWizardDialog dlg = new LoaderWizardDialog(LoaderWindow.getApp().getShell(), 
-                this.opInfo.getUIHelper().instantiateWizard(this.controller));
-        dlg.open();
+    public String lookup(final LogEvent event, final String key) {
+        return null;
     }
-
 }

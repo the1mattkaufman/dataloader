@@ -58,6 +58,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.TimeZone;
 
@@ -67,6 +68,7 @@ import java.util.TimeZone;
  */
 public class Config {
     private static Logger logger = LogManager.getLogger(Config.class);
+    private static final String DECRYPTED_SUFFIX = ".decrypted";
 
     /**
      * Default values for specific parameters
@@ -317,6 +319,20 @@ public class Config {
      * communications with bulk api always use UTF8
      */
     public static final String BULK_API_ENCODING = "UTF-8";
+    
+    /*
+     * command line options. Not stored in config.properties file.
+     * ************
+     * Option names MUST start with the prefix "CLI_OPTION_"
+     * ************
+     */
+    public static final String CLI_OPTION_RUN_MODE = "run.mode";
+    public static final String RUN_MODE_UI_VAL = "ui";
+    public static final String RUN_MODE_BATCH_VAL = "batch";
+    public static final String CLI_OPTION_GMT_FOR_DATE_FIELD_VALUE = "datefield.usegmt";
+    public static final String CLI_OPTION_SWT_NATIVE_LIB_IN_JAVA_LIB_PATH = "swt.nativelib.inpath";
+    public static final String CLI_OPTION_CONFIG_DIR_PROP = "salesforce.config.dir";
+    public static final String CONFIG_DIR_DEFAULT_VALUE = "configs";
 
     /**
      * Creates an empty config that loads from and saves to the a file. <p> Use the methods
@@ -766,9 +782,21 @@ public class Config {
         Map<String, String> propMap = values;
         // initialize encryption
         if (propMap.containsKey(propertyName)) {
+            if (propMap.containsKey(propertyName + DECRYPTED_SUFFIX)) {
+                String decryptedPropValue = propMap.get(propertyName + DECRYPTED_SUFFIX);
+                String propValueToBeDecrypted = propMap.get(propertyName);
+                if (decryptedPropValue != null 
+                        && propValueToBeDecrypted != null
+                        && decryptedPropValue.equals(propValueToBeDecrypted)) {
+                    return; // do not decrypt an already decrypted value
+                }
+            }
             String propValue = decryptProperty(encrypter, propMap, propertyName, isBatchMode());
             if (propValue == null) propValue = "";
             propMap.put(propertyName, propValue);
+            
+            // cache decrypted value
+            propMap.put(propertyName + DECRYPTED_SUFFIX, propValue);
         }
     }
 
@@ -911,6 +939,8 @@ public class Config {
         putValue(OAUTH_REFRESHTOKEN, "");
         
         skipSaveOfUnsupportedProperties();
+        skipSaveOfDecryptedProperties();
+        skipSaveOfCLIOptions();
 
         FileOutputStream out = null;
         try {
@@ -934,6 +964,22 @@ public class Config {
     private void skipSaveOfUnsupportedProperties() {
         // do not save a value for enabling Bulk V2 
         this.properties.remove(BULKV2_API_ENABLED);
+    }
+    
+    private void skipSaveOfDecryptedProperties() {
+        this.properties.remove(PASSWORD + DECRYPTED_SUFFIX);
+        this.properties.remove(PROXY_PASSWORD + DECRYPTED_SUFFIX);
+        this.properties.remove(OAUTH_ACCESSTOKEN + DECRYPTED_SUFFIX);
+        this.properties.remove(OAUTH_REFRESHTOKEN + DECRYPTED_SUFFIX);
+    }
+    
+    private void skipSaveOfCLIOptions() {
+        Set<String> keys = this.properties.stringPropertyNames();
+        for (String key : keys) {
+            if (key.startsWith("CLI_OPTION_")) {
+                this.properties.remove(key);
+            }
+        }
     }
     
     /**

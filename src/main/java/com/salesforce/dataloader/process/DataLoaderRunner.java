@@ -40,32 +40,37 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import org.apache.logging.log4j.Logger;
 import java.lang.management.ManagementFactory;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.apache.logging.log4j.LogManager;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import com.salesforce.dataloader.client.HttpClientTransport;
+import com.salesforce.dataloader.config.Config;
 
 public class DataLoaderRunner extends Thread {
 
-    private static final String UI = "ui";
-    private static final String RUN_MODE = "run.mode";
-    private static final String RUN_MODE_BATCH = "batch";
-    private static final String GMT_FOR_DATE_FIELD_VALUE = "datefield.usegmt";
-    private static final String SWT_NATIVE_LIB_IN_JAVA_LIB_PATH = "swt.nativelib.inpath";
     private static final String LOCAL_SWT_DIR = "target/";
+    private static final String PATH_SEPARATOR = System.getProperty("path.separator");
+    private static final String FILE_SEPARATOR = System.getProperty("file.separator");
     private static boolean useGMTForDateFieldValue = false;
     private static Map<String, String> argNameValuePair;
+    private static Logger logger;
 
     private static boolean isBatchMode() {        
-        return argNameValuePair.containsKey(RUN_MODE) ?
-                RUN_MODE_BATCH.equalsIgnoreCase(argNameValuePair.get(RUN_MODE)) : false;
+        return argNameValuePair.containsKey(Config.CLI_OPTION_RUN_MODE) ?
+                Config.RUN_MODE_BATCH_VAL.equalsIgnoreCase(argNameValuePair.get(Config.CLI_OPTION_RUN_MODE)) : false;
     }
     
     public static boolean doUseGMTForDateFieldValue() {
@@ -73,8 +78,8 @@ public class DataLoaderRunner extends Thread {
     }
     
     private static void setUseGMTForDateFieldValue() {
-        if (argNameValuePair.containsKey(GMT_FOR_DATE_FIELD_VALUE)) {
-            if ("false".equalsIgnoreCase(argNameValuePair.get(GMT_FOR_DATE_FIELD_VALUE))) {
+        if (argNameValuePair.containsKey(Config.CLI_OPTION_GMT_FOR_DATE_FIELD_VALUE)) {
+            if ("false".equalsIgnoreCase(argNameValuePair.get(Config.CLI_OPTION_GMT_FOR_DATE_FIELD_VALUE))) {
                 useGMTForDateFieldValue = false;
             }
         }
@@ -90,32 +95,30 @@ public class DataLoaderRunner extends Thread {
     }
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new DataLoaderRunner());
         argNameValuePair = Controller.getArgMapFromArgArray(args);
-        Controller.setConfigDir(args);
+        Controller.initializeConfigDirAndLog(argNameValuePair);
+        Runtime.getRuntime().addShutdownHook(new DataLoaderRunner());
+        logger = LogManager.getLogger(DataLoaderRunner.class);
+        if (args != null) {
+            for (String arg : args) {
+                logger.debug(arg);
+            }
+        }
         setUseGMTForDateFieldValue();
-        if (argNameValuePair.containsKey(SWT_NATIVE_LIB_IN_JAVA_LIB_PATH) 
-                && "true".equalsIgnoreCase(argNameValuePair.get(SWT_NATIVE_LIB_IN_JAVA_LIB_PATH))){
+        if (isBatchMode()) {
+            ProcessRunner.runBatchMode(args);
+        } else if (argNameValuePair.containsKey(Config.CLI_OPTION_SWT_NATIVE_LIB_IN_JAVA_LIB_PATH) 
+                && "true".equalsIgnoreCase(argNameValuePair.get(Config.CLI_OPTION_SWT_NATIVE_LIB_IN_JAVA_LIB_PATH))){
             /* Run in the UI mode, get the controller instance with batchMode == false */
             try {
-                String SWTDirStr = System.getProperty("java.library.path");
-                if (SWTDirStr == null 
-                        || SWTDirStr.isBlank() 
-                        || SWTDirStr.equalsIgnoreCase("null")
-                        || !(Files.exists(Paths.get(SWTDirStr)))) {
-                    System.err.println("Unable to find SWT directory: " + SWTDirStr);
-                    System.err.println("Native JRE for " 
-                      + System.getProperty("os.name") + " : "
-                      + System.getProperty("os.arch") + " not supported.");
-                    System.err.println("Try JRE for the supported platform in emulation mode.");
-                    System.exit(-1);
-                }
-                if (isBatchMode()) {
-                    ProcessRunner.runBatchMode(args);
+                String defaultBrowser = System.getProperty("org.eclipse.swt.browser.DefaultType");
+                if (defaultBrowser == null) {
+                    logger.debug("org.eclipse.swt.browser.DefaultType not set for UI mode on Windows");
                 } else {
-                    Controller controller = Controller.getInstance(UI, false, args);
-                    controller.createAndShowGUI();
+                    logger.debug("org.eclipse.swt.browser.DefaultType set to " + defaultBrowser + " for UI mode on Windows");
                 }
+                Controller controller = Controller.getInstance(Config.RUN_MODE_UI_VAL, false, args);
+                controller.createAndShowGUI();
             } catch (ControllerInitializationException e) {
                 UIUtils.errorMessageBox(new Shell(new Display()), e);
             }
@@ -125,8 +128,6 @@ public class DataLoaderRunner extends Thread {
     }
     
     private static void rerunWithSWTNativeLib(String[] args) {
-        String separator = System.getProperty("file.separator");
-        String classpath = System.getProperty("java.class.path");
         String javaExecutablePath = null;
         try {
             javaExecutablePath = ProcessHandle.current()
@@ -138,10 +139,11 @@ public class DataLoaderRunner extends Thread {
         }
         if (javaExecutablePath == null) {
             javaExecutablePath = System.getProperty("java.home")
-                    + separator + "bin" + separator + "java";
+                    + FILE_SEPARATOR + "bin" + FILE_SEPARATOR + "java";
         }
         // java command is the first argument
         ArrayList<String> jvmArgs = new ArrayList<String>(128);
+        logger.debug("java executable path: " + javaExecutablePath);
         jvmArgs.add(javaExecutablePath);
 
         // JVM options
@@ -149,32 +151,48 @@ public class DataLoaderRunner extends Thread {
         String osName = System.getProperty("os.name").toLowerCase();
         if ((osName.contains("mac")) || (osName.startsWith("darwin"))) {
             jvmArgs.add("-XstartOnFirstThread");
+            logger.debug("added JVM arg -XstartOnFirsThread");
         }
         
         // set JVM arguments
-        String SWTDir = getSWTDir();
-        jvmArgs.add("-Djava.library.path=" + SWTDir);
-        jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
-        
-        // set classpath
-        String pathSeparator = System.getProperty("path.separator");
-        if (classpath != null && !classpath.isBlank()) {
-            classpath = classpath + pathSeparator;
+        // set library path
+        String librarypath = System.getProperty("java.library.path");
+        if (librarypath != null && !librarypath.isBlank()) {
+            librarypath = getSWTDir() + PATH_SEPARATOR + librarypath;
+        } else {
+            librarypath = getSWTDir();
         }
-        classpath = classpath + getSWTJarPath();
+        jvmArgs.add("-Djava.library.path=" + librarypath);
+        logger.debug("set java.library.path=" + librarypath);
+        
+        // add JVM arguments specified in the command line
+        jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
+
+        // set classpath
+        String classpath = System.getProperty("java.class.path");
+        if (classpath != null && !classpath.isBlank()) {
+            classpath = getSWTJarPath() + PATH_SEPARATOR + classpath;
+        } else {
+            classpath = getSWTJarPath();
+        }
         jvmArgs.add("-cp");
         jvmArgs.add(classpath);
+        logger.debug("set java.class.path=" + classpath);
         
         // specify name of the class with main method
         jvmArgs.add(DataLoaderRunner.class.getName());
+        logger.debug("added class to execute - " + DataLoaderRunner.class.getName());
         
         // specify application arguments
+        logger.debug("added following arguments:");
         for (int i = 0; i < args.length; i++) {
           jvmArgs.add(args[i]);
+          logger.debug("    " + args[i]);
         }
         
         // add the argument to indicate that JAVA_LIB_PATH has the directory containing SWT native libraries
-        jvmArgs.add(SWT_NATIVE_LIB_IN_JAVA_LIB_PATH + "=true");
+        jvmArgs.add(Config.CLI_OPTION_SWT_NATIVE_LIB_IN_JAVA_LIB_PATH + "=true");
+        logger.debug("    " + Config.CLI_OPTION_SWT_NATIVE_LIB_IN_JAVA_LIB_PATH + "=true");
         ProcessBuilder processBuilder = new ProcessBuilder(jvmArgs);
         processBuilder.redirectErrorStream(true);
         try {
@@ -236,7 +254,12 @@ public class DataLoaderRunner extends Thread {
     }
     
     private static String getSWTDir() {
-        String SWTDirStr = buildPathStringFromOSAndArch("swt", "", "", "");
+        String path = Controller.getDirContainingClassJar(DataLoaderRunner.class);
+        if (path == null) {
+            path = ".";
+        }
+
+        String SWTDirStr = buildPathStringFromOSAndArch(path + "/" +"swt", "", "", "");
         if (Files.exists(Paths.get(SWTDirStr))) {
             return SWTDirStr;
         }
@@ -248,7 +271,6 @@ public class DataLoaderRunner extends Thread {
         }
         
         SWTDirStr = buildPathStringFromOSAndArch(LOCAL_SWT_DIR + "swt", "", "", "");
-
         if (SWTDirStr == null) {
             System.err.println("Unable to find SWT directory for " 
                     + System.getProperty("os.name") + " : "
